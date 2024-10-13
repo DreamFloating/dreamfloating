@@ -124,9 +124,7 @@ vim daemon.json
 {
   "log-driver": "local",
   "log-opts": {
-    "max-size": "10m",
-    "max-file": "5",
-    "compress": true
+    "max-size": "10m"
   }
 }
 ```
@@ -134,10 +132,6 @@ vim daemon.json
 `local`表示使用本地文件记录驱动程序
 
 `max-size`文件最大大小
-
-`max-file`文件数量最大大小
-
-`compress`是否启用文件压缩
 
 **完整的daemon.json示例**
 
