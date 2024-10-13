@@ -276,3 +276,17 @@ vim daemon.json
 }
 ```
 
+## 其他事项
+
+### [Firewall limitations](https://docs.docker.com/engine/install/debian/#firewall-limitations)
+
+> **Warning**
+>
+> 
+>
+> Before you install Docker, make sure you consider the following security implications and firewall incompatibilities.
+
+- If you use ufw or firewalld to manage firewall settings, be aware that when you expose container ports using Docker, these ports bypass your firewall rules. For more information, refer to [Docker and ufw](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw).
+- Docker is only compatible with `iptables-nft` and `iptables-legacy`. Firewall rules created with `nft` are not supported on a system with Docker installed. Make sure that any firewall rulesets you use are created with `iptables` or `ip6tables`, and that you add them to the `DOCKER-USER` chain, see [Packet filtering and firewalls](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+
+如果使用ufw或firewalld来管理防火墙设置，请注意，当使用Docker公开容器端口时，这些端口会绕过您的防火墙规则。有关更多信息，请参阅[Docker和ufw](https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-and-ufw)。
