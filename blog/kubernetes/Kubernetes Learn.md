@@ -36,6 +36,8 @@ edit 2024-10-13
 
 ### kubectl
 
+[文档地址](https://kubernetes.io/zh-cn/docs/tasks/tools/install-kubectl-linux/)
+
 Kubernetes 命令行工具 [kubectl](https://kubernetes.io/zh-cn/docs/reference/kubectl/kubectl/)， 让你可以对 Kubernetes 集群运行命令。 你可以使用 kubectl 来部署应用、监测和管理集群资源以及查看日志。
 
 有关更多信息，包括 kubectl 操作的完整列表，请参见 [`kubectl` 参考文件](https://kubernetes.io/zh-cn/docs/reference/kubectl/)。
@@ -98,6 +100,8 @@ kubectl cluster-info
 
 ### minikube
 
+[文档地址](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download)
+
 To install the latest minikube **stable** release on **x86-64** **Linux** using **Debian package**:
 
 ```
@@ -157,5 +161,35 @@ minikube start -p aged --kubernetes-version=v1.16.1
 
 ```shell
 minikube delete --all
+```
+
+### Kind
+
+[文档地址](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+
+安装命令
+
+```sh
+[ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.24.0/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
+```
+
+创建集群
+
+```
+kind create cluster --name kind
+```
+
+得到已创建集群的信息
+
+```
+kind get clusters
+```
+
+删除集群
+
+```
+kind delete cluster --name kind
 ```
 
