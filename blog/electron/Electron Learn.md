@@ -253,6 +253,12 @@ app.whenReady().then(() => {
 
 ## 打包应用程序
 
+清理缓存
+
+```
+npx electron-forge publish --clean
+```
+
 打包
 
 ```sh
