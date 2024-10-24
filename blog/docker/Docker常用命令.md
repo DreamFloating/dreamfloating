@@ -17,5 +17,4 @@
 | docker load -i /path/to/destination/my-image.tar             | 导入docker镜像                                               |
 | docker export -o my-container.tar my-container               | 导出docker容器 my-container表示容器ID                        |
 | docker import /path/to/destination/my-container.tar my-imported-image | 导入docker容器为新的镜像                                     |
-|                                                              |                                                              |
 
