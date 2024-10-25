@@ -16,6 +16,7 @@
 > ```
 >
 > ```toml
+> bindAddr = "0.0.0.0"
 > bindPort = 7000
 > auth.method = "token"
 > auth.token = "token info"

@@ -17,4 +17,11 @@
 | docker load -i /path/to/destination/my-image.tar             | 导入docker镜像                                               |
 | docker export -o my-container.tar my-container               | 导出docker容器 my-container表示容器ID                        |
 | docker import /path/to/destination/my-container.tar my-imported-image | 导入docker容器为新的镜像                                     |
+| docker system prune -a                                       | 删除未使用的资源                                             |
 
+> `docker system prune -a` 会删除：
+>
+> 1. **已停止的容器**：所有未运行的容器都会被删除。
+> 2. **未被任何容器使用的镜像**：包括没有被打标（dangling）的镜像和未被任何容器使用的普通镜像。
+> 3. **未被使用的网络**：所有没有被任何容器使用的网络。
+> 4. **构建缓存**：没有被使用的构建缓存层。

@@ -168,7 +168,7 @@ networks:
   custom:
     external: true
 services:
-  redis:
+  consul:
     image: "hashicorp/consul"
     container_name: "consul"
     ports:
@@ -196,7 +196,7 @@ networks:
   custom:
     external: true
 services:
-  redis:
+  influxdb:
     image: "influxdb"
     container_name: "influxdb"
     ports:
@@ -242,7 +242,7 @@ services:
     ports:
       - "9092:9092"
     volumes:
-      - "kafka_data:/bitnami"
+      - "kafka-data:/bitnami"
     environment:
       # KRaft settings
       - KAFKA_CFG_NODE_ID=0
@@ -292,6 +292,206 @@ services:
     networks:
       - custom
 volumes:
-  kafka_data:
+  kafka-data:
 ```
+
+## prometheus、node-exporter、cadvisor、grafana
+
+参考项目：[dockprom](https://github.com/stefanprodan/dockprom)
+
+```bash
+docker pull prom/prometheus
+docker pull prom/node-exporter
+docker pull gcr.io/cadvisor/cadvisor
+docker pull grafana/grafana
+mkdir /root/docker-compose/monitor
+cd /root/docker-compose/monitor
+vim docker-compose.yml
+```
+
+```yaml
+networks:
+  custom:
+    external: true
+services:
+  prometheus:
+    image: "prom/prometheus:latest"
+    container_name: "prometheus"
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - custom
+    labels:
+      org.label-schema.group: "monitoring"
+  nodeexporter:
+    image: "prom/node-exporter:latest"
+    container_name: "nodeexporter"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    expose:
+      - 9100
+    networks:
+      - custom
+    labels:
+      org.label-schema.group: "monitoring"
+  cadvisor:
+    image: "gcr.io/cadvisor/cadvisor:latest"
+    container_name: cadvisor
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    expose:
+      - 8080
+    networks:
+      - custom
+    labels:
+      org.label-schema.group: "monitoring"
+  grafana:
+    image: "grafana/grafana:latest"
+    container_name: "grafana"
+    ports:
+      - '3000:3000'
+    expose:
+      - 3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - custom
+    labels:
+      org.label-schema.group: "monitoring"
+volumes:
+  prometheus-data:
+  grafana-data:
+```
+
+```bash
+vim prometheus.yml
+```
+
+```yaml
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+      monitor: 'docker-host-alpha'
+scrape_configs:
+  - job_name: 'prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'nodeexporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['nodeexporter:9100']
+  - job_name: 'cadvisor'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['cadvisor:8080']
+```
+
+```bash
+mkdir /root/docker-compose/monitor/grafana
+mkdir /root/docker-compose/monitor/grafana/provisioning
+mkdir /root/docker-compose/monitor/grafana/provisioning/dashboards
+mkdir /root/docker-compose/monitor/grafana/provisioning/datasources
+cd /root/docker-compose/monitor/grafana/provisioning/datasources
+vim datasource.yml
+```
+
+```yaml
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: true
+    editable: true
+```
+
+```bash
+cd /root/docker-compose/monitor/grafana/provisioning/dashboards
+vim dashboard.yml
+```
+
+```yaml
+apiVersion: 1
+providers:
+  - name: 'Prometheus'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+```
+
+```bash
+vim docker_containers.json
+vim docker_host.json
+vim monitor_services.json
+```
+
+## minio
+
+```bash
+docker pull minio/minio
+mkdir /root/docker-compose/minio
+cd /root/docker-compose/minio
+vim docker-compose.yml
+```
+
+```yaml
+networks:
+  custom:
+    external: true
+services:
+  minio:
+    image: "minio/minio:latest"
+    container_name: "minio"
+    ports:
+      - "9001:9000"
+      - "9002":"9001"
+    volumes:
+      - ./data:/data
+      - ./config:/root/.minio
+    environment:
+      - MINIO_ACCESS_KEY=root
+      - MINIO_SECRET_KEY=roottoor
+    command: server /data --console-address ":9000" --address ":9001"
+    networks:
+      - custom
+```
+
+
 
