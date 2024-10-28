@@ -242,7 +242,7 @@ services:
     ports:
       - "9092:9092"
     volumes:
-      - "kafka-data:/bitnami"
+      - "kafka-data:/bitnami/kafka"
     environment:
       # KRaft settings
       - KAFKA_CFG_NODE_ID=0
@@ -294,6 +294,307 @@ services:
 volumes:
   kafka-data:
 ```
+
+## Kafka Cluster and Akhq
+
+```bash
+docker pull tchiotludo/akhq
+docker pull apache/kafka
+mkdir /root/docker-compose/kafka-cluster
+cd /root/docker-compose/kafka-cluster
+vim docker-compose.yml
+```
+
+```
+services:
+  broker:
+    image: apache/kafka:latest
+    container_name: broker
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+```
+
+
+
+```yaml
+networks:
+  custom:
+    external: true
+services:
+  kafka-c-1:
+    image: 'bitnami/kafka'
+    container_name: "kafka-c-1"
+    volumes:
+      - "kafka-data-c-1:/bitnami"
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=controller
+      - KAFKA_LISTENERS="CONTROLLER://:9093"
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CONTROLLER_QUORUM_VOTERS="1@kafka-c-1:9093,2@kafka-c-2:9093"
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    networks:
+      - custom
+  kafka-c-2:
+    image: 'bitnami/kafka'
+    container_name: "kafka-c-2"
+    volumes:
+      - "kafka-data-c-2:/bitnami"
+    environment:
+      - KAFKA_NODE_ID=2
+      - KAFKA_PROCESS_ROLES=controller
+      - KAFKA_LISTENERS="CONTROLLER://:9093"
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CONTROLLER_QUORUM_VOTERS="1@kafka-c-1:9093,2@kafka-c-2:9093"
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    networks:
+      - custom
+  kafka-c-3:
+    image: 'bitnami/kafka'
+    container_name: "kafka-c-3"
+    volumes:
+      - "kafka-data-c-3:/bitnami"
+    environment:
+      - KAFKA_NODE_ID=3
+      - KAFKA_PROCESS_ROLES=controller
+      - KAFKA_LISTENERS="CONTROLLER://:9093"
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CONTROLLER_QUORUM_VOTERS="1@kafka-c-1:9093,2@kafka-c-2:9093,3@kafka-c-3:9093"
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    networks:
+      - custom
+  kafka-b-1:
+    image: 'bitnami/kafka'
+    container_name: "kafka-b-1"
+    ports:
+      - 10001:9092
+    volumes:
+      - "kafka-data-b-1:/bitnami"
+    environment:
+      - KAFKA_NODE_ID=4
+      - KAFKA_PROCESS_ROLES=broker
+      - KAFKA_LISTENERS="PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      - KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://kafka-b-1:19092,PLAINTEXT_HOST://localhost:10001"
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      - KAFKA_CONTROLLER_QUORUM_VOTERS="1@kafka-c-1:9093,2@kafka-c-2:9093,3@kafka-c-3:9093"
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    depends_on:
+      - kafka-c-1
+      - kafka-c-2
+      - kafka-c-3
+    networks:
+      - custom
+  kafka-b-2:
+    image: 'bitnami/kafka'
+    container_name: "kafka-b-2"
+    ports:
+      - 10002:9092
+    volumes:
+      - "kafka-data-b-2:/bitnami"
+    environment:
+      - KAFKA_NODE_ID=5
+      - KAFKA_PROCESS_ROLES=broker
+      - KAFKA_LISTENERS="PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      - KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://kafka-b-2:19092,PLAINTEXT_HOST://localhost:10002"
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      - KAFKA_CONTROLLER_QUORUM_VOTERS="1@kafka-c-1:9093,2@kafka-c-2:9093,3@kafka-c-3:9093"
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    depends_on:
+      - kafka-c-1
+      - kafka-c-2
+      - kafka-c-3
+    networks:
+      - custom
+  kafka-b-3:
+    image: 'bitnami/kafka'
+    container_name: "kafka-b-3"
+    ports:
+      - 10003:9092
+    volumes:
+      - "kafka-data-b-3:/bitnami"
+    environment:
+      - KAFKA_NODE_ID=6
+      - KAFKA_PROCESS_ROLES=broker
+      - KAFKA_LISTENERS="PLAINTEXT://:19092,PLAINTEXT_HOST://:9092"
+      - KAFKA_ADVERTISED_LISTENERS="PLAINTEXT://kafka-data-b-3:19092,PLAINTEXT_HOST://localhost:10003"
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP="CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+      - KAFKA_CONTROLLER_QUORUM_VOTERS="1@kafka-c-1:9093,2@kafka-c-2:9093,3@kafka-c-3:9093"
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    depends_on:
+      - kafka-c-1
+      - kafka-c-2
+      - kafka-c-3
+    networks:
+      - custom
+  akhq:
+    image: 'tchiotludo/akhq'
+    container_name: "akhq"
+    environment:
+      AKHQ_CONFIGURATION: |
+        micronaut:
+          security:
+            enabled: true
+            token:
+              jwt:
+                signatures:
+                  secret:
+                    generator:
+                      secret: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.e30.sOt0052yykJR1Hx-9UyJdZXobGSIO4rjx-58PafHHlQ"
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "kafka-b-1:9092,kafka-b-2:9092,kafka-b-3:9092"
+          security:
+            default-group: admin
+            basic-auth:
+              - username: admin
+                # ukAcSF0ZCaT0uwMqX1jb
+                password: "859416a18ea542e56744b5f2286acaec3d3d055be535cc168b6b9f77581bee93"
+                passwordHash: SHA256
+                groups:
+                  - admin
+    ports:
+      - "8090:8080"
+    links:
+      - kafka-b-1
+      - kafka-b-2
+      - kafka-b-3
+    networks:
+      - custom
+volumes:
+  kafka-data-c-1:
+  kafka-data-c-2:
+  kafka-data-c-3:
+  kafka-data-b-1:
+  kafka-data-b-2:
+  kafka-data-b-3:
+```
+
+参考
+
+```yaml
+services:
+  controller-1:
+    image: apache/kafka:latest
+    container_name: controller-1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  controller-2:
+    image: apache/kafka:latest
+    container_name: controller-2
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  controller-3:
+    image: apache/kafka:latest
+    container_name: controller-3
+    environment:
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_LISTENERS: CONTROLLER://:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  broker-1:
+    image: apache/kafka:latest
+    container_name: broker-1
+    ports:
+      - 29092:9092
+    environment:
+      KAFKA_NODE_ID: 4
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: 'PLAINTEXT://:19092,PLAINTEXT_HOST://:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker-1:19092,PLAINTEXT_HOST://localhost:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    depends_on:
+      - controller-1
+      - controller-2
+      - controller-3
+
+  broker-2:
+    image: apache/kafka:latest
+    container_name: broker-2
+    ports:
+      - 39092:9092
+    environment:
+      KAFKA_NODE_ID: 5
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: 'PLAINTEXT://:19092,PLAINTEXT_HOST://:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker-2:19092,PLAINTEXT_HOST://localhost:39092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    depends_on:
+      - controller-1
+      - controller-2
+      - controller-3
+
+  broker-3:
+    image: apache/kafka:latest
+    container_name: broker-3
+    ports:
+      - 49092:9092
+    environment:
+      KAFKA_NODE_ID: 6
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: 'PLAINTEXT://:19092,PLAINTEXT_HOST://:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker-3:19092,PLAINTEXT_HOST://localhost:49092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller-1:9093,2@controller-2:9093,3@controller-3:9093
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    depends_on:
+      - controller-1
+      - controller-2
+      - controller-3
+```
+
+
+
+
 
 ## prometheus、node-exporter、cadvisor、grafana
 
@@ -456,9 +757,35 @@ providers:
       path: /etc/grafana/provisioning/dashboards
 ```
 
+显示系统中挂载的文件系统及其类型
+
+```bash
+df -T
+```
+
+查看`/dev/sda1`的类型
+
+```bash
+vim docker_host.json
+```
+
+大概在480行 修改为自身系统的文件类型
+
+```
+"expr": "sum(node_filesystem_free_bytes{fstype=\"ext4\"})",
+```
+
 ```bash
 vim docker_containers.json
-vim docker_host.json
+```
+
+大概在406行 修改为自身系统的文件类型
+
+```
+"expr": "(node_filesystem_size_bytes{fstype=\"ext4\"} - node_filesystem_free_bytes{fstype=\"ext4\"}) / node_filesystem_size_bytes{fstype=\"ext4\"}  * 100",
+```
+
+```bash
 vim monitor_services.json
 ```
 
