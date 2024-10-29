@@ -295,7 +295,7 @@ volumes:
   kafka-data:
 ```
 
-## Kafka Cluster and Akhq
+## Kafka Cluster and Akhq（未完成测试）
 
 ```bash
 docker pull tchiotludo/akhq
@@ -324,8 +324,6 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_NUM_PARTITIONS: 3
 ```
-
-
 
 ```yaml
 networks:
@@ -592,10 +590,6 @@ services:
       - controller-3
 ```
 
-
-
-
-
 ## prometheus、node-exporter、cadvisor、grafana
 
 参考项目：[dockprom](https://github.com/stefanprodan/dockprom)
@@ -819,6 +813,66 @@ services:
     networks:
       - custom
 ```
+
+## emqx
+
+```
+docker pull emqx/emqx
+mkdir /root/docker-compose/emqx
+cd /root/docker-compose/emqx
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  emqx1:
+    image: emqx/emqx:latest
+    container_name: emqx1
+    environment:
+      - "EMQX_NODE_NAME=emqx@node1.emqx.io"
+      - "EMQX_CLUSTER__DISCOVERY_STRATEGY=static"
+      - "EMQX_CLUSTER__STATIC__SEEDS=[emqx@node1.emqx.io,emqx@node2.emqx.io]"
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 5s
+      timeout: 25s
+      retries: 5
+    networks:
+      emqx-bridge:
+        aliases:
+          - node1.emqx.io
+    ports:
+      - 1883:1883
+      - 8083:8083
+      - 8084:8084
+      - 8883:8883
+      - 18083:18083 
+
+  emqx2:
+    image: emqx/emqx:latest
+    container_name: emqx2
+    environment:
+      - "EMQX_NODE_NAME=emqx@node2.emqx.io"
+      - "EMQX_CLUSTER__DISCOVERY_STRATEGY=static"
+      - "EMQX_CLUSTER__STATIC__SEEDS=[emqx@node1.emqx.io,emqx@node2.emqx.io]"
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 5s
+      timeout: 25s
+      retries: 5
+    networks:
+      emqx-bridge:
+        aliases:
+          - node2.emqx.io
+
+networks:
+  emqx-bridge:
+    driver: bridge
+```
+
+
+
+
 
 
 
