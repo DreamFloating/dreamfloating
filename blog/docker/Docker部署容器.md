@@ -816,7 +816,7 @@ services:
 
 ## emqx
 
-```
+```bash
 docker pull emqx/emqx
 mkdir /root/docker-compose/emqx
 cd /root/docker-compose/emqx
@@ -838,7 +838,7 @@ services:
       timeout: 25s
       retries: 5
     networks:
-      emqx-bridge:
+      custom:
         aliases:
           - node1.emqx.io
     ports:
@@ -861,14 +861,66 @@ services:
       timeout: 25s
       retries: 5
     networks:
-      emqx-bridge:
+      custom:
         aliases:
           - node2.emqx.io
 
 networks:
-  emqx-bridge:
-    driver: bridge
+  custom:
+    external: true
 ```
+
+## rabbitmq
+
+```bash
+docker pull rabbitmq:management
+mkdir /root/docker-compose/rabbitmq
+cd /root/docker-compose/rabbitmq
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  rabbitmq:
+    image: "rabbitmq:management"
+    container_name: "rabbitmq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - custom
+
+volumes:
+  rabbitmq-data:
+
+networks:
+  custom:
+    external: true
+```
+
+```bash
+# 检查插件启用状态
+docker exec -it rabbitmq rabbitmq-plugins list
+```
+
+> 安装插件的方法 如[rabbitmq-delayed-message-exchange](https://github.com/rabbitmq/rabbitmq-delayed-message-exchange)
+>
+> 从[rabbitmq-delayed-message-exchange](https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases)下载适合版本的.ez文件
+>
+> 拷贝到容器对应目录中并启用
+>
+> ```bash
+> docker cp rabbitmq_delayed_message_exchange-版本号.ez rabbitmq:/plugins
+> docker exec -it rabbitmq rabbitmq-plugins enable rabbitmq_delayed_message_exchange
+> docker compose restart rabbitmq
+> ```
+
+
 
 
 
