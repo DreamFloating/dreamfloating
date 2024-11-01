@@ -6,6 +6,16 @@
 docker network create custom
 ```
 
+> 目前发现虚拟机挂起恢复后，docker network custom 网络有问题，主机无法正常访问运行的
+>
+> 重启docker之后可以恢复正常
+>
+> ```
+> systemctl restart docker
+> ```
+>
+> https://blog.csdn.net/congcong365/article/details/131223037 其他解决方案
+
 ## postgres
 
 ```bash
@@ -30,7 +40,7 @@ networks:
     external: true
 services:
   postgres:
-    image: "postgres"
+    image: "postgres:latest"
     container_name: "postgresql"
     ports:
       - "5432:5432"
@@ -920,11 +930,459 @@ docker exec -it rabbitmq rabbitmq-plugins list
 > docker compose restart rabbitmq
 > ```
 
+## sonarqube
 
+查看系统当前参数
 
+```
+sysctl vm.max_map_count
+sysctl fs.file-max
+# 查看可以同时打开的文件描述符的最大数量
+ulimit -n
+# 查看可以同时运行的最大进程数
+ulimit -u
+```
 
+修改系统参数 重启失效
 
+```
+sysctl -w vm.max_map_count=524288
+sysctl -w fs.file-max=131072
+ulimit -n 131072
+ulimit -u 8192
+```
 
+永久修改 在末尾添加
+
+```bash
+vim /etc/sysctl.conf
+vm.max_map_count=524288
+```
+
+```bash
+docker pull sonarqube
+mkdir /root/docker-compose/sonarqube
+mkdir /root/docker-compose/sonarqube/sonarqube_data
+mkdir /root/docker-compose/sonarqube/sonarqube_extensions
+mkdir /root/docker-compose/sonarqube/sonarqube_logs
+sudo chown -R 1000:1000 ./sonarqube_logs ./sonarqube_data ./sonarqube_extensions
+cd /root/docker-compose/sonarqube
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  sonarqube:
+    image: "sonarqube:latest"
+    container_name: "sonarqube"
+    ports:
+      - "9000:9000"
+    environment:
+      - "SONAR_JDBC_URL=jdbc:postgresql://postgresql:5432/sonarqube"
+      - "SONAR_JDBC_USERNAME=postgres"
+      - "SONAR_JDBC_PASSWORD=rfvTGByhnUJM"
+    volumes:
+      - ./sonarqube_data:/opt/sonarqube/data
+      - ./sonarqube_extensions:/opt/sonarqube/extensions
+      - ./sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## Nginx
+
+```bash
+docker pull nginx
+mkdir /root/docker-compose/nginx
+mkdir /root/docker-compose/nginx/html
+cd /root/docker-compose/nginx
+docker run --rm --entrypoint=cat nginx /etc/nginx/nginx.conf > nginx.conf
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  nginx:
+    image: "nginx:latest"
+    container_name: "nginx"
+    ports:
+      - "80:80"
+    volumes:
+      - "./html:/usr/share/nginx/html:ro" # 只读模式
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro" # 只读模式
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+```bash
+vim nginx.conf
+```
+
+```
+server {
+  listen 80;
+  server_name localhost;
+
+  location / {
+    root    html;
+    index   index.html index.htm;
+  }
+  
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html {
+    root   html;
+  }
+}
+```
+
+```bash
+cd /root/docker-compose/nginx/html
+vim index.html
+```
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+
+```bash
+vim 50x.html
+```
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Error</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>An error occurred.</h1>
+<p>Sorry, the page you are looking for is currently unavailable.<br/>
+Please try again later.</p>
+<p>If you are the system administrator of this resource then you should check
+the error log for details.</p>
+<p><em>Faithfully yours, nginx.</em></p>
+</body>
+</html>
+```
+
+## Dashy
+
+```bash
+docker pull lissy93/dashy
+mkdir /root/docker-compose/dashy
+cd /root/docker-compose/dashy
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  dashy:
+    image: "lissy93/dashy:latest"
+    container_name: "dashy"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./dashy-data:/app/user-data"
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## Homepage
+
+```bash
+docker pull lissy93/dashy
+mkdir /root/docker-compose/homepage
+cd /root/docker-compose/homepage
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    ports:
+      - 10000:3000
+    volumes:
+      - ./config:/app/config
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+> 将homepage放在nginx后并启用身份验证(未测试)
+>
+> 首先，安装 `htpasswd` 工具来生成密码文件：
+>
+> ```
+> # 安装 Apache 工具包（Debian/Ubuntu）
+> sudo apt-get install apache2-utils
+> 
+> # 生成密码文件
+> htpasswd -c /path/to/htpasswd user1
+> ```
+>
+> 然后，创建一个 Nginx 配置文件（`nginx.conf`）：
+>
+> ```
+> server {
+>     listen 80;
+> 
+>     location / {
+>         auth_basic "Protected Area";
+>         auth_basic_user_file /etc/nginx/.htpasswd;
+> 
+>         proxy_pass http://your_upstream_service;
+>     }
+> }
+> ```
+
+## homarr
+
+```
+docker pull ghcr.io/ajnart/homarr
+mkdir /root/docker-compose/homarr
+cd /root/docker-compose/homarr
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  homarr:
+    image: "ghcr.io/ajnart/homarr:latest"
+    container_name: "homarr"
+    ports:
+      - "7575:7575"
+    volumes:
+      - "./configs:/app/data/configs"
+      - "./icons:/app/public/icons"
+      - "./data:/data"
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## watchtower
+
+## dockge
+
+## linkace
+
+> 第一版 需要三个服务 mariadb、linkace、redis
+>
+> ```bash
+> docker pull linkace/linkace:simple
+> mkdir /root/docker-compose/linkace
+> cd /root/docker-compose/linkace
+> vim docker-compose.yml
+> vim .env
+> chmod 666 /root/docker-compose/linkace/.env
+> ```
+
+```yaml
+services:
+  db:
+    image: "mariadb:latest"
+    container_name: "linkace-mariadb"
+    command: mariadbd --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+    volumes:
+      - linkace_db:/var/lib/mysql
+  app:
+    image: "linkace/linkace:simple"
+    container_name: "linkace"
+    depends_on:
+      - db
+    ports:
+      - "81:80"
+    volumes:
+      - ./.env:/app/.env
+      - ./backups:/app/storage/app/backups
+      - linkace_logs:/app/storage/logs
+  redis:
+    image: "redis:latest"
+    container_name: "linkace-redis"
+
+volumes:
+  linkace_logs:
+  linkace_db:
+    driver: local
+```
+
+```
+## LINKACE CONFIGURATION
+
+## Please note that the LinkAce Docker image will be renamed with the release of LinkAce 2!
+## Read more: https://github.com/Kovah/LinkAce/issues/502
+
+## Basic app configuration
+COMPOSE_PROJECT_NAME=linkace
+# The environment is usually 'production' but may be changed to 'local' for development
+APP_ENV=local
+# The app key is generated later, please leave it like that
+APP_KEY=someRandomStringWith32Characters
+# Enable the debug more if you are running into issues or while developing
+APP_DEBUG=true
+
+## Configuration of the database connection
+## Attention: Those settings are configured during the web setup, please do not modify them now.
+# Set the database driver (mysql, pgsql, sqlsrv, sqlite)
+DB_CONNECTION=mysql
+# Set the host of your database here
+DB_HOST=db
+# Set the port of your database here
+DB_PORT=3306
+# Set the database name here
+DB_DATABASE=linkace
+# Set both username and password of the user accessing the database
+DB_USERNAME=linkace
+# Wrap your password into quotes (") if it contains special characters
+DB_PASSWORD=qazWSXedc
+
+## Redis cache configuration
+# Set the Redis connection here if you want to use it
+REDIS_HOST=redis
+REDIS_PASSWORD=
+REDIS_PORT=6379
+
+## You probably do not want to change any values blow. Only continue if you know what you are doing.
+# Configure various driver
+SESSION_DRIVER=redis
+LOG_CHANNEL=stack
+BROADCAST_DRIVER=log
+CACHE_DRIVER=redis
+QUEUE_DRIVER=database
+```
+
+> 第二版 使用已部署的mariadb 和 redis,需要先在mariadb中创建对应的账号和数据库
+>
+> ```bash
+> docker pull linkace/linkace:simple
+> mkdir /root/docker-compose/linkace
+> cd /root/docker-compose/linkace
+> vim docker-compose.yml
+> ```
+
+```yaml
+services:
+  app:
+    image: "linkace/linkace:simple"
+    container_name: "linkace"
+    ports:
+      - "81:80"
+    volumes:
+      - ./.env:/app/.env
+      - ./backups:/app/storage/app/backups
+      - linkace_logs:/app/storage/logs
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+
+volumes:
+  linkace_logs:
+```
+
+>```bash
+>vim .env
+>chmod 666 /root/docker-compose/linkace/.env
+>```
+
+```
+## LINKACE CONFIGURATION
+
+## Please note that the LinkAce Docker image will be renamed with the release of LinkAce 2!
+## Read more: https://github.com/Kovah/LinkAce/issues/502
+
+## Basic app configuration
+COMPOSE_PROJECT_NAME=linkace
+# The environment is usually 'production' but may be changed to 'local' for development
+APP_ENV=local
+# The app key is generated later, please leave it like that
+APP_KEY=someRandomStringWith32Characters
+# Enable the debug more if you are running into issues or while developing
+APP_DEBUG=true
+
+## Configuration of the database connection
+## Attention: Those settings are configured during the web setup, please do not modify them now.
+# Set the database driver (mysql, pgsql, sqlsrv, sqlite)
+DB_CONNECTION=mysql
+# Set the host of your database here
+DB_HOST=mariadb
+# Set the port of your database here
+DB_PORT=3306
+# Set the database name here
+DB_DATABASE=linkace
+# Set both username and password of the user accessing the database
+DB_USERNAME=linkace
+# Wrap your password into quotes (") if it contains special characters
+DB_PASSWORD=qazWSXedc
+
+## Redis cache configuration
+# Set the Redis connection here if you want to use it
+REDIS_HOST=redis
+REDIS_PASSWORD=nkrnZipHdC8ztftCFDfJ
+REDIS_PORT=6379
+
+## You probably do not want to change any values blow. Only continue if you know what you are doing.
+# Configure various driver
+SESSION_DRIVER=redis
+LOG_CHANNEL=stack
+BROADCAST_DRIVER=log
+CACHE_DRIVER=redis
+QUEUE_DRIVER=database
+```
 
 
 

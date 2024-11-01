@@ -322,3 +322,11 @@ ss -tuln | grep 80
 sudo iptables -L -n --line-numbers | grep 18083
 ```
 
+## 内存占用检查
+
+> 列出占用内存最高的前几个进程
+
+```
+ps aux --sort=-%mem | head
+```
+
