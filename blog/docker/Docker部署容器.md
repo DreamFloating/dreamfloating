@@ -18,6 +18,8 @@ docker network create custom
 
 ## postgres
 
+> PostgreSQL 是一个功能强大的开源关系型数据库，以其强大的数据完整性、高度可扩展性和支持复杂查询著称。它支持 ACID 特性，拥有多种扩展功能，包括 JSON 数据类型、全文搜索、事务处理和并发控制，广泛应用于企业级和数据密集型应用。
+
 ```bash
 docker pull postgres
 mkdir /root/docker-compose/postgres
@@ -74,6 +76,8 @@ docker compose down
 
 ## mariadb
 
+> MariaDB 是 MySQL 的一个分支，具有高性能、开源、兼容 MySQL 的特点，支持 ACID 事务、分布式架构、分区表等功能。它提供了更高的安全性和更多的存储引擎选项，适合企业级应用和高并发场景。
+
 ```bash
 docker pull mariadb
 mkdir /root/docker-compose/mariadb
@@ -91,6 +95,7 @@ services:
     container_name: "mariadb"
     environment:
       MYSQL_ROOT_PASSWORD: 'qazWSXedcRFV1234!'
+      TZ: 'Asia/Shanghai' # 设置时区
     ports:
       - "3306:3306"
     volumes:
@@ -109,6 +114,8 @@ cat /etc/mysql/my.cnf
 ```
 
 ## redis
+
+> Redis 是一个开源的内存数据库，支持键值对存储，通常用于缓存、会话管理和实时数据处理。它支持丰富的数据结构（如字符串、哈希、列表、集合等），提供持久化选项，保证数据不丢失，适合高性能、低延迟的应用场景。
 
 ```bash
 docker pull redis
@@ -166,6 +173,8 @@ volumes:
 
 ## consul
 
+> Consul 是一个支持分布式系统的服务网格解决方案，提供服务发现、配置管理和健康检查等功能。它使用键值对存储配置信息，支持自动化服务注册和动态负载均衡，适用于微服务架构中的服务治理和故障恢复。
+
 ```bash
 docker pull hashicorp/consul
 mkdir /root/docker-compose/consul
@@ -193,6 +202,8 @@ volumes:
 ```
 
 ## influxdb
+
+> InfluxDB 是一个开源的时序数据库，专为高性能地存储和查询时间序列数据而设计，常用于监控、物联网和实时分析。它支持精确的时间戳、高效的数据写入和强大的查询语言（InfluxQL），适合处理大量的时序数据。
 
 ```bash
 docker pull influxdb
@@ -228,6 +239,10 @@ volumes:
 ```
 
 ## Kafka and Akhq
+
+> **Kafka** 是一个分布式流处理平台，主要用于实时数据流的发布、订阅、存储和处理。Kafka 擅长处理高吞吐量、低延迟的数据流，适用于日志收集、事件跟踪、数据管道等场景。它提供了分区和复制机制，保证数据的可靠性和可扩展性。
+>
+> **Akhq** 是 Kafka 的管理工具，提供一个基于 Web 的界面，方便用户查看和管理 Kafka 集群。它支持主题浏览、消费者组管理、消息查询和实时监控，简化了 Kafka 的管理流程。
 
 ```bash
 docker pull tchiotludo/akhq
@@ -602,6 +617,14 @@ services:
 
 ## prometheus、node-exporter、cadvisor、grafana
 
+> **Prometheus**：一个开源监控系统，用于收集、存储和查询时序数据，广泛应用于监控基础设施和应用性能。
+>
+> **Node Exporter**：Prometheus 的数据采集插件，专门用于收集主机的系统指标（如 CPU、内存、磁盘等），将数据暴露给 Prometheus。
+>
+> **cAdvisor**：用于监控容器的资源使用情况，如 CPU、内存、网络等，并提供实时监控数据，适合容器化环境。
+>
+> **Grafana**：数据可视化工具，支持与 Prometheus 等多种数据源集成，可以创建动态仪表板，以图表方式展示监控数据。
+
 参考项目：[dockprom](https://github.com/stefanprodan/dockprom)
 
 ```bash
@@ -795,6 +818,8 @@ vim monitor_services.json
 
 ## minio
 
+> MinIO 是一个开源的高性能对象存储系统，兼容 Amazon S3 API，适合分布式环境和云原生应用。它提供数据冗余、纠删码和高吞吐量，常用于数据湖、备份和云存储等场景。
+
 ```bash
 docker pull minio/minio
 mkdir /root/docker-compose/minio
@@ -825,6 +850,8 @@ services:
 ```
 
 ## emqx
+
+> EMQX 是一个开源、高性能的 MQTT 消息中间件，支持大规模 IoT（物联网）设备的连接与消息通信。它具备 MQTT、MQTT-SN、CoAP 和 HTTP 等多协议支持，具备水平扩展、高可用性和低延迟的特性，适合物联网、智能家居、车联网等场景。
 
 ```bash
 docker pull emqx/emqx
@@ -882,6 +909,8 @@ networks:
 
 ## rabbitmq
 
+>  RabbitMQ 是一个开源消息队列系统，支持多种消息协议（如 AMQP、MQTT、STOMP 等）。它通过消息队列实现异步通信、负载均衡和消息路由，适用于分布式系统的数据传输和任务调度。RabbitMQ 提供可靠的消息传递和灵活的路由策略，广泛应用于微服务、日志处理和实时分析等场景。
+
 ```bash
 docker pull rabbitmq:management
 mkdir /root/docker-compose/rabbitmq
@@ -931,6 +960,8 @@ docker exec -it rabbitmq rabbitmq-plugins list
 > ```
 
 ## sonarqube
+
+> SonarQube 是一个开源的代码质量管理平台，用于持续检查和分析代码的质量、漏洞、安全性和可维护性。它支持多种编程语言，提供丰富的可视化报告和统计信息，帮助开发团队识别和修复代码问题，促进最佳实践和高质量软件的开发。SonarQube 可与 CI/CD 工具集成，支持持续集成和部署过程中的代码质量监控。
 
 查看系统当前参数
 
@@ -994,6 +1025,8 @@ networks:
 ```
 
 ## Nginx
+
+> Nginx 是一个高性能的开源 HTTP 和反向代理服务器，同时也可以用作负载均衡器和缓存服务器。它以处理大量并发连接而著称，广泛用于网站的静态内容服务、API 网关、流媒体传输和反向代理等场景。Nginx 配置灵活，支持多种模块，适合用于现代 Web 应用架构。
 
 ```bash
 docker pull nginx
@@ -1102,6 +1135,8 @@ the error log for details.</p>
 
 ## Dashy
 
+> Dashy 是一个开源的自托管仪表板工具，允许用户通过自定义的链接和小工具来组织和访问常用的 Web 应用、服务和书签。它提供了友好的用户界面，支持主题和布局定制，适合个人用户和团队用于创建个性化的启动页和工作面板。Dashy 可以方便地集成多种服务，帮助用户提高工作效率。
+
 ```bash
 docker pull lissy93/dashy
 mkdir /root/docker-compose/dashy
@@ -1127,6 +1162,8 @@ networks:
 ```
 
 ## Homepage
+
+> Homepage 是一个开源项目，允许用户通过 Docker 容器快速创建和自托管的个性化启动页，便于访问常用的 Web 应用和链接。
 
 ```bash
 docker pull lissy93/dashy
@@ -1181,6 +1218,8 @@ networks:
 
 ## homarr
 
+> Homarr 是一个自托管的仪表板工具，专门设计用于管理和访问个人应用程序、服务和链接。它提供了一个友好的用户界面，允许用户将常用的 Web 应用程序、媒体服务器、游戏和其他服务组织在一个地方。
+
 ```
 docker pull ghcr.io/ajnart/homarr
 mkdir /root/docker-compose/homarr
@@ -1209,9 +1248,15 @@ networks:
 
 ## watchtower
 
+> Watchtower 是一个开源的 Docker 容器管理工具，用于自动更新正在运行的 Docker 容器。它监控 Docker 守护进程中的容器，并在检测到基础镜像更新时，自动拉取新镜像并重启相关容器，确保应用程序始终运行最新版本。
+
 ## dockge
 
+> Docke 是一个开源的 Docker 前端界面工具，旨在简化 Docker 容器的管理和操作。它提供了一个用户友好的 Web 界面，用户可以通过图形化方式创建、启动、停止和管理 Docker 容器。
+
 ## linkace
+
+> LinkAce 是一个自托管的书签管理工具，允许用户收集、组织和分享书签。它提供了一个直观的用户界面，支持标签、分类和搜索功能，帮助用户高效管理他们的在线链接和资源。
 
 > 第一版 需要三个服务 mariadb、linkace、redis
 >
@@ -1383,6 +1428,138 @@ BROADCAST_DRIVER=log
 CACHE_DRIVER=redis
 QUEUE_DRIVER=database
 ```
+
+## portainer
+
+> Portainer 是一个开源的容器管理工具，提供了一个简单易用的 Web 界面，用于管理 Docker 容器、镜像、网络和数据卷。它支持多种 Docker 环境，包括单节点 Docker 和 Docker Swarm 集群，方便用户监控和管理容器化应用。
+
+```bash
+docker pull portainer/portainer-ce
+mkdir /root/docker-compose/portainer
+cd /root/docker-compose/portainer
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  portainer:
+    image: "portainer/portainer-ce:latest"
+    container_name: "portainer"
+    ports:
+      - "8000:8000"
+      - "9443:9443"
+      - "9002:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+
+volumes:
+  portainer_data:
+```
+
+## linux-dash
+
+> 适用于 Linux 的 Web 仪表板（暂时用不上）
+
+```bash
+docker pull imightbebob/linux-dash:x86
+mkdir /root/docker-compose/linux-dash
+cd /root/docker-compose/linux-dash
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  linux-dash:
+    image: "imightbebob/linux-dash:x86"
+    container_name: "linux-dash"
+    ports:
+      - "8080:8080"
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## Mysql
+
+```bash
+docker pull mysql
+mkdir /root/docker-compose/mysql
+cd /root/docker-compose/mysql
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  mysql:
+    image: "mysql:latest"
+    container_name: "mysql"
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=qazWSXedcRFV
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    networks:
+      - custom
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql.cnf:/etc/my.cnf
+networks:
+  custom:
+    external: true
+
+volumes:
+  mysql-data:
+```
+
+```ini
+# For advice on how to change settings please see
+# http://dev.mysql.com/doc/refman/9.1/en/server-configuration-defaults.html
+
+[mysqld]
+#
+# Remove leading # and set to the amount of RAM for the most important data
+# cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.
+innodb_buffer_pool_size = 512M
+#
+# Remove leading # to turn on a very important data integrity option: logging
+# changes to the binary log between backups.
+# log_bin
+#
+# Remove leading # to set options mainly useful for reporting servers.
+# The server defaults are faster for transactions and fast SELECTs.
+# Adjust sizes as needed, experiment to find the optimal values.
+# join_buffer_size = 128M
+# sort_buffer_size = 2M
+# read_rnd_buffer_size = 2M
+
+host-cache-size=0
+skip-name-resolve
+datadir=/var/lib/mysql
+socket=/var/run/mysqld/mysqld.sock
+secure-file-priv=/var/lib/mysql-files
+user=mysql
+
+pid-file=/var/run/mysqld/mysqld.pid
+
+max_connections = 200
+
+[client]
+socket=/var/run/mysqld/mysqld.sock
+
+!includedir /etc/mysql/conf.d/
+```
+
+
 
 
 
