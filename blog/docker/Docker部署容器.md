@@ -174,6 +174,12 @@ volumes:
 ## consul
 
 > Consul 是一个支持分布式系统的服务网格解决方案，提供服务发现、配置管理和健康检查等功能。它使用键值对存储配置信息，支持自动化服务注册和动态负载均衡，适用于微服务架构中的服务治理和故障恢复。
+>
+> 2024-11-19
+>
+> ~~启用acl后有一些问题无法解决,搁置启用acl~~
+>
+> 直接使用global-management policy创建的agent token好像没有问题，所以可能是创建policy的问题
 
 ```bash
 docker pull hashicorp/consul
@@ -194,12 +200,60 @@ services:
       - "8500:8500"
     volumes:
       - consul-data:/consul/data
-    command: agent -server -ui -bind=127.0.0.1 -bootstrap-expect=1 -client=0.0.0.0
+      - ./config:/consul/config
+    command: agent -server -bootstrap -ui -bind=127.0.0.1 -client=0.0.0.0 -bootstrap-expect=1
+    environment:
+      - CONSUL_HTTP_TOKEN=7b73aac7-6c23-d13e-b9b3-34eb03a0367b
     networks:
       - custom
 volumes:
   consul-data:
 ```
+
+创建引导 Token
+
+```bash
+docker exec -it consul consul acl bootstrap
+```
+
+```
+AccessorID:       45d95c0e-e230-1c58-e875-e7eb79c78057
+SecretID:         7b73aac7-6c23-d13e-b9b3-34eb03a0367b
+Description:      Bootstrap Token (Global Management)
+Local:            false
+Create Time:      2024-11-19 10:19:11.33823649 +0000 UTC
+Policies:
+   00000000-0000-0000-0000-000000000001 - global-management
+```
+
+在浏览器中访问consul ui页面,并使用bootstrap token登录,直接创建一个新的agent token 使用 global-management policy
+
+~~使用global-management策略创建 agent-token~~
+
+```bash
+docker exec -it consul consul acl token create \
+  -description "Agent Token" \
+  -policy-name "global-management" \
+  -token=7b73aac7-6c23-d13e-b9b3-34eb03a0367b
+```
+
+> docker容器中配置文件目录`/consul/config`
+>
+> consul.json
+>
+> ```
+> {
+>   "acl": {
+>     "enabled": true,
+>     "default_policy": "deny",
+>     "enable_token_persistence": true,
+>     "tokens": {
+>       "initial_management": "7b73aac7-6c23-d13e-b9b3-34eb03a0367b",
+>       "agent": "d3da2956-0a63-fac4-9b9d-5ad9e5210590"
+>     }
+>   }
+> }
+> ```
 
 ## influxdb
 
@@ -330,7 +384,7 @@ cd /root/docker-compose/kafka-cluster
 vim docker-compose.yml
 ```
 
-```
+```yaml
 services:
   broker:
     image: apache/kafka:latest
@@ -1557,6 +1611,44 @@ max_connections = 200
 socket=/var/run/mysqld/mysqld.sock
 
 !includedir /etc/mysql/conf.d/
+```
+
+## Nacos
+
+> 2024-11-19
+>
+> 通过frpc代理，可以正常访问ui，但是在spring cloud中无法注册成功，提示Client not connected, current status:STARTING
+
+```bash
+docker pull nacos/nacos-server
+mkdir /root/docker-compose/nacos
+cd /root/docker-compose/nacos
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  nacos:
+    image: "nacos/nacos-server:latest"
+    container_name: "nacos"
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - NACOS_AUTH_ENABLE=true
+      - NACOS_AUTH_TOKEN_EXPIRE_SECONDS=18000
+      - NACOS_AUTH_IDENTITY_KEY=saeServerIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=saeSecurity
+      - NACOS_AUTH_TOKEN=UEFlWWM4eTBuVTBvMXNacVhFZTU3R2tHQTVVQUJIMnM=
+    networks:
+      - custom
+    volumes:
+      - ./standalone-logs/:/home/nacos/logs
+networks:
+  custom:
+    external: true
 ```
 
 
