@@ -44,7 +44,7 @@ vim docker-compose.yml
 
 ```yaml
 services:
-  sonarqube:
+  sae-gateway:
     image: "sae-gateway:latest"
     container_name: "sae-gateway"
     ports:
