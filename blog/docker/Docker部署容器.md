@@ -16,6 +16,13 @@ docker network create custom
 >
 > https://blog.csdn.net/congcong365/article/details/131223037 其他解决方案
 
+> `restart` 的选项说明：
+>
+> - `no`（默认）：容器不会自动重启。
+> - `always`：无论退出状态如何，容器始终重启。
+> - `unless-stopped`：容器总是重启，除非手动停止。
+> - `on-failure[:max-retries]`：仅在容器以非零状态退出时重启，可以指定最大重启次数。
+
 ## postgres
 
 > PostgreSQL 是一个功能强大的开源关系型数据库，以其强大的数据完整性、高度可扩展性和支持复杂查询著称。它支持 ACID 特性，拥有多种扩展功能，包括 JSON 数据类型、全文搜索、事务处理和并发控制，广泛应用于企业级和数据密集型应用。
@@ -129,7 +136,7 @@ cd /root/docker-compose/redis
 vim redis.conf
 ```
 
-大概在21行 修改
+大概在88行 修改
 
 ```
 # bind 127.0.0.1 -::1
