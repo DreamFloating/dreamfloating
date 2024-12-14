@@ -95,6 +95,8 @@
 > localIP = "127.0.0.1"
 > localPort = 22
 > remotePort = 2000
+> transport.useEncryption = true
+> transport.useCompression = true
 > ```
 >
 > 启动命令
@@ -138,6 +140,21 @@
 > sudo systemctl enable frpc
 > ```
 >
+
+> **动态配置更新**
+>
+> 要启用此功能，需要在 frpc 中启用 webServer，以提供 API 服务。配置如下：
+>
+> ```toml
+> webServer.addr = "127.0.0.1"
+> webServer.port = 7400
+> ```
+>
+> 然后执行以下命令来重载配置：
+>
+> ```bash
+> ./frpc reload -c ./frpc.toml
+> ```
 
 ## 介绍
 

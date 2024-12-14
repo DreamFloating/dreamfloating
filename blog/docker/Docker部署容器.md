@@ -1658,7 +1658,83 @@ networks:
     external: true
 ```
 
+## Stirling-PDF
 
+```bash
+docker pull stirlingtools/stirling-pdf
+mkdir /root/docker-compose/stirling-pdf
+cd /root/docker-compose/stirling-pdf
+vim docker-compose.yml
+```
 
+```yml
+services:
+  stirling-pdf:
+    image: 'stirlingtools/stirling-pdf:latest'
+    container_name: 'stirling-pdf'
+    ports:
+      - '8081:8080'
+    volumes:
+      - ./trainingData:/usr/share/tessdata # Required for extra OCR languages
+      - ./extraConfigs:/configs
+      - ./customFiles:/customFiles/
+      - ./logs:/logs/
+    networks:
+      - custom
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
+      - LANGS=zh_CN
+networks:
+  custom:
+    external: true
+```
+
+## elasticsearch && kibana
+
+```bash
+docker pull elasticsearch
+mkdir /root/docker-compose/elasticsearch
+cd /root/docker-compose/elasticsearch
+vim docker-compose.yml
+```
+
+```yml
+services:
+  elasticsearch:
+    image: elasticsearch:6.8.23
+    container_name: elasticsearch
+    environment:
+      ES_JAVA_OPTS: "-Djava.net.preferIPv4Stack=true -Xms2g -Xmx2g"
+      TZ: Asia/Shanghai
+      transport.host: 0.0.0.0
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      discovery.zen.minimum_master_nodes: 1
+      discovery.zen.ping.unicast.hosts: elasticsearch
+    volumes:
+      - "./data:/usr/share/elasticsearch/data"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - custom
+  kibana:
+    image: kibana:6.8.23
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    links:
+      - elasticsearch:elasticsearch
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - custom
+networks:
+  custom:
+    external: true
+```
 
 
