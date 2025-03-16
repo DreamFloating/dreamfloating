@@ -1,0 +1,72 @@
+/* 匹配页面的根元素 html */
+:root {
+  /* 自定义属性 默认字体大小为 16px */
+  --font-size: 16px;
+  /* 禁止在页面上选择文本 */
+  /* user-select: none; */
+  /* 隐藏滚动条 */
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#app {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* body样式 */
+body {
+  /* 外边距属性 */
+  margin: 0;
+  /* 内边距属性 */
+  padding: 0;
+  /* 字体大小 与根元素保持一致*/
+  font-size: var(--font-size);
+}
+
+/* 默认的ElContainer布局容器组件样式 */
+.default_container_style {
+  width: 100%;
+  height: 100%;
+}
+
+/* 默认的ElMain容器组件样式 */
+.default_main_style {
+  padding: 0 !important;
+}
+
+/* 覆盖el-card中body的默认样式 */
+.el-card__body {
+  width: 100%;
+  height: 100%;
+  padding: 0 !important;
+}
+
+/* 覆盖el-drawer中header的默认样式 */
+.el-drawer__header {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 覆盖el-drawer中body的默认样式 */
+.el-drawer__body {
+  padding: 0.4rem !important;
+}
+
+/* 覆盖ElDialog容器组件中body的默认样式 */
+.el-dialog__body {
+  height: 60vh !important;
+  overflow: hidden !important;
+}
+
+/* 网页灰色 */
+/* html{
+  -webkit-filter:grayscale(100%);
+  -moz-filter:grayscale(100%);
+  -ms-filter:grayscale(100%);
+  -o-filter:grayscale(100%);
+  filter:grayscale(100%);
+  filter:url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'><filter id=\'grayscale\'><feColorMatrix type=\'matrix\' values=\'0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0\'/></filter></svg>#grayscale");
+  filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1)
+} */

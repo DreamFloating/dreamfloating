@@ -1,0 +1,67 @@
+{
+  "system": {
+    "title": "DreamFloating网站书签管理",
+    "copyright_info": "DreamFloating",
+    "version": "1.0.0",
+    "language": {
+      "zh-cn": "中文"
+    },
+    "tip": {
+      "login_loading": "登录中,请稍等...",
+      "login_response_success": "登录成功",
+      "403_status": "无访问权限",
+      "401_status": "登录过期",
+      "page_not_fund": "页面不存在",
+      "request_fail": "请求失败",
+      "response_fail": "响应出错",
+      "user_no_login": "未登录",
+      "operation_successful": "操作成功"
+    },
+    "button": {
+      "login": "登录",
+      "back_home": "返回首页"
+    },
+    "link": {
+      "about": "关于"
+    }
+  },
+  "rules_tip": {
+    "username_required": "用户名是必须的",
+    "password_required": "密码是必须的",
+    "login_valid_fail": "登录验证失败,请检查用户名密码",
+    "website_url_required": "网站URL地址是必须的"
+  },
+  "placeholder": {
+    "login_username": "请输入用户名",
+    "login_password": "请输入密码",
+    "search_website": "请输入搜索的站点名称或网址",
+    "add_website_title": "请输入网站标题",
+    "add_website_url": "请输入网站的URL地址",
+    "add_website_description": "请输入网站的描述",
+    "add_website_keywords": "新增关键字",
+    "add_website_tags": "新增标签",
+    "add_website_type": "新增类型",
+    "add_website_orderNumber": "排序号"
+  },
+  "tool_tip": {
+    "add_website": "新增网站信息",
+    "search_website": "搜索网站信息",
+    "save_website": "保存网站信息"
+  },
+  "table": {
+    "colum": {
+      "operations": "操作",
+      "createTime": "创建时间",
+      "updateTime": "更新时间",
+      "orderNumber": "排序号",
+      "website": {
+        "url": "网站URL地址",
+        "title": "网站标题",
+        "description": "网站描述",
+        "keywords": "关键字",
+        "tags": "标签",
+        "type": "类型"
+      }
+    }
+  }
+}

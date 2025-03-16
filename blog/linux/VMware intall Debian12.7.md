@@ -199,3 +199,120 @@ ufw allow 22
 ```
 
 使用`ip address`得到Debian主机的ip地址,在SSH客户端访问Debian主机
+
+---
+
+### 使用nftables作为防火墙并使用fail2ban封锁ip
+
+```bash
+apt install nftables
+```
+
+编辑`/etc/nftables.conf`
+
+```
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+        # 输入链：控制进入服务器的流量
+        chain input {
+                type filter hook input priority 0; policy drop;
+
+                # 允许本机回环（127.0.0.1 和 ::1）
+                iif lo accept
+
+                # 允许已建立和相关的连接（保持 SSH 会话等）
+                ct state established,related accept
+
+                # 允许 ICMP（Ping），防止调试时无法访问服务器
+                ip protocol icmp accept
+                ip6 nexthdr icmpv6 accept
+
+                # 限制同一ip每分钟最多ssh连接请求 超出则丢弃
+                tcp dport 22 meter ssh-meter { ip saddr limit rate 3/minute } accept
+
+                # 开放端口
+                tcp dport { 7000, 7400 } accept
+        }
+
+        # 服务器一般不转发流量，默认丢弃
+        chain forward {
+                type filter hook forward priority 0; policy drop;
+        }
+
+        # 允许服务器发出的所有流量
+        chain output {
+                type filter hook output priority 0; policy accept;
+        }
+}
+```
+
+重启和设置自启动
+
+```
+systemctl restart nftables
+systemctl enable nftables
+```
+
+```
+检查规则
+nft list ruleset
+添加规则 允许端口流量 比如 10000
+sudo nft add rule inet filter input tcp dport 10000 accept
+sudo nft list ruleset
+sudo nft list ruleset > /etc/nftables.conf
+如果系统重启，使用以下命令来恢复规则集
+sudo nft -f /etc/nftables.conf
+或者直接修改 /etc/nftables.conf 在chain input 末尾添加
+tcp dport 10000 accept
+tcp dport { 10000, 10001 } accept
+重新生效命令
+sudo nft -f /etc/nftables.conf
+```
+
+**重启也有效需要该命令**
+
+```
+nft list ruleset > /etc/nftables.conf
+```
+
+### 安装fail2ban自动封锁ip 需要安装rsyslog
+
+```
+apt install rsyslog
+```
+
+编辑 /etc/ssh/sshd_config 将日志登录改为info
+
+```
+LogLevel INFO
+```
+
+```
+apt install fail2ban
+```
+
+```
+vim /etc/fail2ban/jail.local
+```
+
+```
+[DEFAULT]
+banaction = nftables-allports
+
+[sshd]
+enabled = true
+port = ssh
+logpath = /var/log/auth.log
+maxretry = 3
+bantime = 24h
+```
+
+```
+systemctl restart ssh
+systemctl restart rsyslog
+systemclt restart fail2ban
+```
+
