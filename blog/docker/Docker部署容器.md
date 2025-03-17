@@ -250,15 +250,15 @@ docker exec -it consul consul acl token create \
 >
 > ```
 > {
->   "acl": {
->     "enabled": true,
->     "default_policy": "deny",
->     "enable_token_persistence": true,
->     "tokens": {
->       "initial_management": "7b73aac7-6c23-d13e-b9b3-34eb03a0367b",
->       "agent": "d3da2956-0a63-fac4-9b9d-5ad9e5210590"
->     }
->   }
+> "acl": {
+>  "enabled": true,
+>  "default_policy": "deny",
+>  "enable_token_persistence": true,
+>  "tokens": {
+>    "initial_management": "7b73aac7-6c23-d13e-b9b3-34eb03a0367b",
+>    "agent": "d3da2956-0a63-fac4-9b9d-5ad9e5210590"
+>  }
+> }
 > }
 > ```
 
@@ -1266,14 +1266,14 @@ networks:
 >
 > ```
 > server {
->     listen 80;
+>  listen 80;
 > 
->     location / {
->         auth_basic "Protected Area";
->         auth_basic_user_file /etc/nginx/.htpasswd;
+>  location / {
+>      auth_basic "Protected Area";
+>      auth_basic_user_file /etc/nginx/.htpasswd;
 > 
->         proxy_pass http://your_upstream_service;
->     }
+>      proxy_pass http://your_upstream_service;
+>  }
 > }
 > ```
 
@@ -1658,78 +1658,58 @@ networks:
     external: true
 ```
 
-## Stirling-PDF
+## Navidrome
 
 ```bash
-docker pull stirlingtools/stirling-pdf
-mkdir /root/docker-compose/stirling-pdf
-cd /root/docker-compose/stirling-pdf
+docker pull deluan/navidrome
+mkdir /root/docker-compose/navidrome
+cd /root/docker-compose/navidrome
 vim docker-compose.yml
 ```
 
-```yml
+```yaml
 services:
-  stirling-pdf:
-    image: 'stirlingtools/stirling-pdf:latest'
-    container_name: 'stirling-pdf'
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: "navidrome"
     ports:
-      - '8081:8080'
-    volumes:
-      - ./trainingData:/usr/share/tessdata # Required for extra OCR languages
-      - ./extraConfigs:/configs
-      - ./customFiles:/customFiles/
-      - ./logs:/logs/
+      - "10003:4533"
+    restart: unless-stopped
+    environment:
+      ND_SCANSCHEDULE: 1h
+      ND_LOGLEVEL: info  
+      ND_SESSIONTIMEOUT: 24h
+      ND_BASEURL: ""
     networks:
       - custom
-    environment:
-      - DOCKER_ENABLE_SECURITY=false
-      - INSTALL_BOOK_AND_ADVANCED_HTML_OPS=false
-      - LANGS=zh_CN
+    volumes:
+      - "/root/docker-compose/navidrome/data:/data"
+      - "/root/alist-depository/musics:/music:ro"
 networks:
   custom:
     external: true
 ```
 
-## elasticsearch && kibana
+## Music Tag Web
 
 ```bash
-docker pull elasticsearch
-mkdir /root/docker-compose/elasticsearch
-cd /root/docker-compose/elasticsearch
+docker pull xhongc/music_tag_web
+mkdir /root/docker-compose/music-tag-web
+cd /root/docker-compose/music-tag-web
 vim docker-compose.yml
 ```
 
-```yml
+```yaml
 services:
-  elasticsearch:
-    image: elasticsearch:6.8.23
-    container_name: elasticsearch
-    environment:
-      ES_JAVA_OPTS: "-Djava.net.preferIPv4Stack=true -Xms2g -Xmx2g"
-      TZ: Asia/Shanghai
-      transport.host: 0.0.0.0
-      discovery.type: single-node
-      bootstrap.memory_lock: "true"
-      discovery.zen.minimum_master_nodes: 1
-      discovery.zen.ping.unicast.hosts: elasticsearch
+  music-tag-web:
+    image: xhongc/music_tag_web:latest
+    container_name: "music-tag-web"
+    ports:
+      - "10005:8002"
     volumes:
-      - "./data:/usr/share/elasticsearch/data"
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    networks:
-      - custom
-  kibana:
-    image: kibana:6.8.23
-    container_name: kibana
-    environment:
-      ELASTICSEARCH_URL: http://elasticsearch:9200
-    links:
-      - elasticsearch:elasticsearch
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
+      - "/root/alist-depository/musics:/app/media:rw"
+      - "/root/docker-compose/music-tag-web/config:/app/data"
+    restart: unless-stopped
     networks:
       - custom
 networks:
@@ -1737,4 +1717,287 @@ networks:
     external: true
 ```
 
+## samba
 
+```
+docker pull dockurr/samba
+mkdir /root/docker-compose/samba
+cd /root/docker-compose/samba
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  samba:
+    image: dockurr/samba:latest
+    container_name: "samba"
+    environment:
+      NAME: "data"
+      USER: "samba"
+      PASS: "4rfv%TGB6tfc&YGV"
+    ports:
+      - 445:445
+    volumes:
+      - "/root/docker-compose/samba/smb.conf:/etc/samba/smb.conf"
+      - "/root/depository:/storage"
+    restart: unless-stopped
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+```
+vim smb.conf
+```
+
+```
+[global]
+        server string = samba
+        idmap config * : range = 3000-7999
+        security = user
+        server min protocol = SMB2
+
+        # disable printing services
+        load printers = no
+        printing = bsd
+        printcap name = /dev/null
+        disable spoolss = yes
+
+[Data]
+        path = /storage
+        comment = Shared
+        valid users = @smb
+        browseable = yes
+        writable = yes
+        read only = no
+        force user = root
+        force group = root
+```
+
+## nas-tools
+
+```
+docker pull diluka/nas-tools:2.9.1
+mkdir /root/docker-compose/nastools
+cd /root/docker-compose/nastools
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  nas-tools:
+    image: diluka/nas-tools:2.9.1
+    container_name: "nas-tools"
+    ports:
+      - "10006:3000"
+    volumes:
+      - "/root/docker-compose/nastools/config:/config"
+      - "/root/depository/nas:/media"
+    environment:
+      - PUID=1000
+      - PGID=100
+      - UMASK=000
+      - TZ=Asia/Shanghai
+      - NASTOOL_AUTO_UPDATE=false
+    restart: unless-stopped
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## jellyfin
+
+```
+docker pull jellyfin/jellyfin
+mkdir /root/docker-compose/jellyfin
+cd /root/docker-compose/jellyfin
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: "jellyfin"
+    user: 1000:100
+    ports:
+      - "10007:8096"
+    volumes:
+      - "/root/docker-compose/jellyfin/config:/config"
+      - "/root/docker-compose/jellyfin/cache:/cache"
+      - type: bind
+        source: /root/depository/nas
+        target: /media
+    restart: 'unless-stopped'
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## qbittorrent
+
+```
+docker pull johngong/qbittorrent
+mkdir /root/docker-compose/qbittorrent
+cd /root/docker-compose/qbittorrent
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  qbittorrent:
+    image: johngong/qbittorrent:latest
+    container_name: "qbittorrent"
+    ports:
+      - "10008:10008"
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - "/root/docker-compose/qbittorrent/config:/config"
+      - "/root/depository/nas/movies:/Downloads"
+    environment:
+      - UID=0
+      - GID=0
+      - UMASK=022
+      - QB_WEBUI_PORT=10008
+    restart: 'unless-stopped'
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## jackett
+
+```
+docker pull linuxserver/jackett
+mkdir /root/docker-compose/jackett
+cd /root/docker-compose/jackett
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  jackett:
+    image: linuxserver/jackett:latest
+    container_name: jackett
+    ports:
+      - "10009:9117"
+    volumes:
+      - "/root/docker-compose/jackett/config:/config"
+      - "/root/docker-compose/depository/nas/downloads:/downloads"
+    environment:
+      - PUID=1000
+      - PGID=100
+      - TZ=Asia/Shanghai
+      - AUTO_UPDATE=true
+    restart: 'unless-stopped'
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## aria2-pro、ariang
+
+```
+docker pull p3terx/aria2-pro
+docker pull p3terx/ariang
+mkdir /root/docker-compose/aria2-pro
+cd /root/docker-compose/aria2-pro
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  aria2-pro:
+    image: p3terx/aria2-pro:latest
+    container_name: "aria2-pro"
+    ports:
+      - "6800:6800"
+      - "6888:6888"
+      - "6888:6888/udp"
+    volumes:
+      - "/root/docker-compose/aria2-pro/config:/config"
+      - "/root/depository/nas/movies:/downloads"
+    environment:
+      - PUID=1000
+      - PGID=100
+      - UMASK=022
+      - RPC_SECRET=qweasdzxc
+      - RPC_PORT=6800
+      - LISTEN_PORT=6888
+      - IPV6_MODE=false
+      - TZ=Asia/Shanghai
+    restart: "unless-stopped"
+    networks:
+      - custom
+
+  ariang:
+    image: p3terx/ariang:latest
+    container_name: "ariang"
+    ports:
+      - "10010:6880"
+    logging:
+      options:
+        max-size: 1m
+    restart: unless-stopped
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
+## chinesesubfinder
+
+```
+docker pull allanpk716/chinesesubfinder:latest-lite
+mkdir /root/docker-compose/chinesesubfinder
+cd /root/docker-compose/chinesesubfinder
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  chinesesubfinder:
+    image: allanpk716/chinesesubfinder:latest-lite
+    container_name: chinesesubfinder
+    volumes:
+      - "/root/docker-compose/chinesesubfinder/config:/config"
+      - "/root/depository/nas:/media"
+    environment:
+      - PUID=1000
+      - PGID=100
+      - PERMS=true
+      - TZ=Asia/Shanghai
+      - UMASK=022
+    restart: unless-stopped
+    networks:
+      - custom
+    ports:
+      - 19035:19035
+      - 19037:19037
+    logging:
+        driver: "json-file"
+        options:
+          max-size: "10m"
+
+networks:
+  custom:
+    external: true
+```

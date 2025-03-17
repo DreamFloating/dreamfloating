@@ -1,0 +1,8 @@
+{
+  "systemTooltip": {
+    "alwaysOnTop": "靠前显示",
+    "windowMinimize": "窗口最小化",
+    "windowMaximize": "窗口最大化",
+    "windowClose": "关闭窗口"
+  }
+}

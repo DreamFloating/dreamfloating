@@ -11,6 +11,7 @@
 > `frps`服务端配置
 >
 > ```bash
+> tar -xzf frp_0.61.2_linux_amd64.tar.gz
 > chmod +x frps
 > vim frps.toml
 > ```
@@ -68,9 +69,9 @@
 > # 重启frp
 > sudo systemctl restart frps
 > # 查看frp状态
-> sudo systemctl status frps
+> con
 > # 开机自启动
-> sudo systemctl enable frpc
+> sudo systemctl enable frps
 > ```
 >
 > `frpc`客户端配置
