@@ -2001,3 +2001,52 @@ networks:
   custom:
     external: true
 ```
+
+## elasticsearch && kibana
+
+```
+docker pull elasticsearch
+mkdir /root/docker-compose/elasticsearch
+cd /root/docker-compose/elasticsearch
+vim docker-compose.yml
+```
+
+```yaml
+services:
+  elasticsearch:
+    image: elasticsearch:6.8.23
+    container_name: elasticsearch
+    environment:
+      ES_JAVA_OPTS: "-Djava.net.preferIPv4Stack=true -Xms2g -Xmx2g"
+      TZ: Asia/Shanghai
+      transport.host: 0.0.0.0
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      discovery.zen.minimum_master_nodes: 1
+      discovery.zen.ping.unicast.hosts: elasticsearch
+    volumes:
+      - "./data:/usr/share/elasticsearch/data"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - custom
+  kibana:
+    image: kibana:6.8.23
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    links:
+      - elasticsearch:elasticsearch
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - custom
+
+networks:
+  custom:
+    external: true
+```
+
